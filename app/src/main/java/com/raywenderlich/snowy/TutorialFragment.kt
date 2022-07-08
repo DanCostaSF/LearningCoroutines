@@ -68,11 +68,19 @@ class TutorialFragment : Fragment() {
 
     snowFilterImage = view.findViewById(R.id.snowFilterImage)
 
+    //esse é usado para quando tiver poucas funções
     coroutineScope.launch(Dispatchers.Main) {
+      val originalBitmap = getOriginalBitmapAsync(tutorial)
+      val snowFilterBitmap = loadSnowFilterAsync(originalBitmap)
+      loadImage(snowFilterBitmap)
+    }
+
+    //usado no caso de muitas funções
+    /*coroutineScope.launch(Dispatchers.Main) {
       val originalBitmap = getOriginalBitmapAsync(tutorial).await()
       val snowFilterBitmap = loadSnowFilterAsync(originalBitmap).await()
       loadImage(snowFilterBitmap)
-    }
+    }*/
 
     return view
   }
@@ -82,15 +90,32 @@ class TutorialFragment : Fragment() {
     val tutorial = arguments?.getParcelable<Tutorial>(TUTORIAL_KEY) as Tutorial
   }
 
-  private fun getOriginalBitmapAsync(tutorial: Tutorial): Deferred<Bitmap> =
+  //este é usado para quando tiver muitas funções na classe
+  /*private fun getOriginalBitmapAsync(tutorial: Tutorial): Deferred<Bitmap> =
     coroutineScope.async(Dispatchers.IO) {
       URL(tutorial.url).openStream().use {
         return@async BitmapFactory.decodeStream(it)
       }
+    }*/
+
+  //esse é usado para quando tiver poucas funções
+  private suspend fun getOriginalBitmapAsync(tutorial: Tutorial): Bitmap =
+    withContext(Dispatchers.IO) {
+      URL(tutorial.url).openStream().use {
+        return@withContext BitmapFactory.decodeStream(it)
+      }
     }
 
-  private fun loadSnowFilterAsync(originalBitmap: Bitmap) : Deferred<Bitmap> =
+  //-------
+  //este é usado para quando tiver muitas funções na classe
+  /*private fun loadSnowFilterAsync(originalBitmap: Bitmap) : Deferred<Bitmap> =
     coroutineScope.async(Dispatchers.Default) {
+      SnowFilter.applySnowEffect(originalBitmap)
+    }*/
+
+  //esse é usado para quando tiver poucas funções
+  private suspend fun loadSnowFilterAsync(originalBitmap: Bitmap) : Bitmap =
+    withContext(Dispatchers.Default) {
       SnowFilter.applySnowEffect(originalBitmap)
     }
 
